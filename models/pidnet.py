@@ -185,7 +185,7 @@ class PIDNet(nn.Module):
 class MyPIDNet(nn.Module):
 
     def __init__(self, m=2, n=3, num_classes=19, planes=64, ppm_planes=96, head_planes=128, augment=True):
-        super(PIDNet, self).__init__()
+        super(MyPIDNet, self).__init__()
         self.augment = augment
 
         # I Branch
@@ -353,6 +353,7 @@ def get_seg_model(cfg, imgnet_pretrained):
     elif 'm' in cfg.MODEL.NAME:
         model = PIDNet(m=2, n=3, num_classes=cfg.DATASET.NUM_CLASSES, planes=64, ppm_planes=96, head_planes=128, augment=True)
     elif 'o' in cfg.MODEL.NAME:
+        print("^^^^^^^^^^my own model^^^^^^^^^^")
         model = MyPIDNet(m=2, n=3, num_classes=cfg.DATASET.NUM_CLASSES, planes=32, ppm_planes=96, head_planes=128,augment=True)
     else:
         model = PIDNet(m=3, n=4, num_classes=cfg.DATASET.NUM_CLASSES, planes=64, ppm_planes=112, head_planes=256, augment=True)
