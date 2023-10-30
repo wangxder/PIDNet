@@ -32,7 +32,7 @@ def parse_args():
     
     parser.add_argument('--cfg',
                         help='experiment configure file name',
-                        default="configs/cityscapes/pidnet_small_cityscapes.yaml",
+                        default="/media/zfy/新加卷/WJJ/py_project/PIDNet/configs/cityscapes/pidnet_small_cityscapes_myconfig.yaml",
                         type=str)
     parser.add_argument('--seed', type=int, default=304)    
     parser.add_argument('opts',
