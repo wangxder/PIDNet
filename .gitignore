@@ -1,5 +1,8 @@
 .vscode/
 .idea/
-.samples/
-.pretrained_models/
-.figs/
+samples/
+pretrained_models/
+figs/
+tools/log
+tools/output
+utils/__pycache__
