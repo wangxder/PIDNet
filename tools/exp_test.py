@@ -4,7 +4,7 @@ import torch
 from numpy import average
 from torch.cuda import amp
 
-from models.pidnet import get_seg_model, MyPIDNet
+from models.pidnet import get_seg_model, MyPIDNet, PIDNet
 
 
 def calculate_flops():
@@ -12,7 +12,12 @@ def calculate_flops():
     model= MyPIDNet(m=2, n=3, num_classes=19, planes=32, ppm_planes=96, head_planes=128,augment=True).eval()
     x=torch.randn(1,3,1024,2048)
     flops = FlopCountAnalysis(model, x)
-    print(flop_count_table(flops))
+    print("mypid=======================================\n" + flop_count_table(flops))
+
+    model = PIDNet(m=2, n=3, num_classes=19, planes=32, ppm_planes=96, head_planes=128, augment=True).eval()
+    x = torch.randn(1, 3, 1024, 2048)
+    flops = FlopCountAnalysis(model, x)
+    print("pid=======================================\n" + flop_count_table(flops))
 
 def calculate_params(model):
     #https://discuss.pytorch.org/t/how-do-i-check-the-number-of-parameters-of-a-model/4325/6
@@ -68,4 +73,4 @@ def compute_eval_time2(model,x,warmup_iter,num_iter,mixed_precision):
     return average(times)
 
 if __name__ == "__main__":
-    cityscapes_speed_test()
+    calculate_flops()

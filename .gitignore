@@ -3,3 +3,6 @@
 .samples/
 .pretrained_models/
 .figs/
+.tools/log/
+.tools/output/.
+
