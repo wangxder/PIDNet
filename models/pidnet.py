@@ -195,7 +195,7 @@ class MyPIDNet(nn.Module):
             nn.ReLU(inplace=True),
         )
 
-        self.relu = nn.ReLU(inplace=True)
+        self.relu = nn.ReLU(inplace=False)
         self.layer1 = self._make_layer(BasicBlock, planes, planes, m)
         self.layer2 = self._make_layer(BasicBlock, planes, planes * 2, m, stride=2)
         self.layer3 = self._make_layer(BasicBlock, planes * 2, planes * 4, n, stride=2)
@@ -342,7 +342,7 @@ class MyPIDNet(nn.Module):
         x_ = self.layer4_(self.relu(x_))
         x_d = self.layer4_d(self.relu(x_d))
         x = x + self.down4(self.relu(x_))
-        x_ = x_ + F.interpolate(self.compression4(layers[3]),
+        x_ = x_ + F.interpolate(self.compression4(self.relu(layers[3])),
                                 size=[height_output, width_output],
                                 mode='bilinear', align_corners=algc
                                 )
@@ -357,7 +357,7 @@ class MyPIDNet(nn.Module):
         x_ = self.layer5_(self.relu(x_))
         x_d = self.layer5_d(self.relu(x_d))
         x = F.interpolate(
-            self.spp(self.layer5(x)),
+            self.spp(self.layer5(self.relu(x))),
             size=[height_output, width_output],
             mode='bilinear', align_corners=algc)
 
