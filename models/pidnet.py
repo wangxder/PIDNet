@@ -212,8 +212,20 @@ class MyPIDNet(nn.Module):
             nn.Conv2d(planes * 8, planes * 2, kernel_size=1, bias=False),
             BatchNorm2d(planes * 2, momentum=bn_mom),
         )
-        self.pag3 = PagFM(planes * 2, planes)
-        self.pag4 = PagFM(planes * 2, planes)
+        # self.pag3 = PagFM(planes * 2, planes)
+        # self.pag4 = PagFM(planes * 2, planes)
+        self.down3 = nn.Sequential(
+            nn.Conv2d(planes * 2, planes * 4, kernel_size=3, stride=2, padding=1, bias=False),
+            BatchNorm2d(planes * 4, momentum=bn_mom),
+        )
+
+        self.down4 = nn.Sequential(
+            nn.Conv2d(planes * 2, planes * 4, kernel_size=3, stride=2, padding=1, bias=False),
+            BatchNorm2d(planes * 4, momentum=bn_mom),
+            nn.ReLU(inplace=True),
+            nn.Conv2d(planes * 4, planes * 8, kernel_size=3, stride=2, padding=1, bias=False),
+            BatchNorm2d(planes * 8, momentum=bn_mom),
+        )
 
         self.layer3_ = self._make_layer(BasicBlock, planes * 2, planes * 2, m)
         self.layer4_ = self._make_layer(BasicBlock, planes * 2, planes * 2, m)
@@ -223,27 +235,27 @@ class MyPIDNet(nn.Module):
         if m == 2:
             self.layer3_d = self._make_single_layer(BasicBlock, planes * 2, planes)
             self.layer4_d = self._make_layer(Bottleneck, planes, planes, 1)
-            self.diff3 = nn.Sequential(
-                nn.Conv2d(planes * 4, planes, kernel_size=3, padding=1, bias=False),
-                BatchNorm2d(planes, momentum=bn_mom),
-            )
-            self.diff4 = nn.Sequential(
-                nn.Conv2d(planes * 8, planes * 2, kernel_size=3, padding=1, bias=False),
-                BatchNorm2d(planes * 2, momentum=bn_mom),
-            )
+            # self.diff3 = nn.Sequential(
+            #     nn.Conv2d(planes * 4, planes, kernel_size=3, padding=1, bias=False),
+            #     BatchNorm2d(planes, momentum=bn_mom),
+            # )
+            # self.diff4 = nn.Sequential(
+            #     nn.Conv2d(planes * 8, planes * 2, kernel_size=3, padding=1, bias=False),
+            #     BatchNorm2d(planes * 2, momentum=bn_mom),
+            # )
             self.spp = PAPPM(planes * 16, ppm_planes, planes * 4)
             self.dfm = Light_Bag(planes * 4, planes * 4)
         else:
             self.layer3_d = self._make_single_layer(BasicBlock, planes * 2, planes * 2)
             self.layer4_d = self._make_single_layer(BasicBlock, planes * 2, planes * 2)
-            self.diff3 = nn.Sequential(
-                nn.Conv2d(planes * 4, planes * 2, kernel_size=3, padding=1, bias=False),
-                BatchNorm2d(planes * 2, momentum=bn_mom),
-            )
-            self.diff4 = nn.Sequential(
-                nn.Conv2d(planes * 8, planes * 2, kernel_size=3, padding=1, bias=False),
-                BatchNorm2d(planes * 2, momentum=bn_mom),
-            )
+            # self.diff3 = nn.Sequential(
+            #     nn.Conv2d(planes * 4, planes * 2, kernel_size=3, padding=1, bias=False),
+            #     BatchNorm2d(planes * 2, momentum=bn_mom),
+            # )
+            # self.diff4 = nn.Sequential(
+            #     nn.Conv2d(planes * 8, planes * 2, kernel_size=3, padding=1, bias=False),
+            #     BatchNorm2d(planes * 2, momentum=bn_mom),
+            # )
             self.spp = DAPPM(planes * 16, ppm_planes, planes * 4)
             self.dfm = Bag(planes * 4, planes * 4)
 
@@ -300,15 +312,24 @@ class MyPIDNet(nn.Module):
 
         width_output = x.shape[-1] // 8
         height_output = x.shape[-2] // 8
+        layers = []
 
         x = self.conv1(x)
         x = self.layer1(x)
-        x = self.relu(self.layer2(self.relu(x)))
-        x_ = self.layer3_(x)
-        x_d = self.layer3_d(x)
+        layers.append(x)
 
-        x = self.relu(self.layer3(x))
-        x_ = self.pag3(x_, self.compression3(x))
+        x = self.layer2(self.relu(x))
+        layers.append(x)
+
+        x_ = self.layer3_(self.relu(x))
+        x_d = self.layer3_d(self.relu(x))
+        x = self.layer3(self.relu(x))
+        layers.append(x)
+        x = x + self.down3(self.relu(x_))
+        x_ = x_ + F.interpolate(self.compression3(self.relu(layers[2])),
+                                size=[height_output, width_output],
+                                mode='bilinear', align_corners=algc
+                                )
         # x_d = x_d + F.interpolate(
         #     self.diff3(x),
         #     size=[height_output, width_output],
@@ -316,11 +337,16 @@ class MyPIDNet(nn.Module):
         if self.augment:
             temp_p = x_
 
-        x = self.relu(self.layer4(x))
+        x = self.layer4(self.relu(x))
+        layers.append(x)
         x_ = self.layer4_(self.relu(x_))
         x_d = self.layer4_d(self.relu(x_d))
-
-        x_ = self.pag4(x_, self.compression4(x))
+        x = x + self.down4(self.relu(x_))
+        x_ = x_ + F.interpolate(self.compression4(layers[3]),
+                                size=[height_output, width_output],
+                                mode='bilinear', align_corners=algc
+                                )
+        # x_ = self.pag4(x_, self.compression4(x))
         # x_d = x_d + F.interpolate(
         #     self.diff4(x),
         #     size=[height_output, width_output],
