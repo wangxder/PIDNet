@@ -5,7 +5,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import time
-from .model_utils import BasicBlock, Bottleneck, segmenthead, DAPPM, PAPPM, PagFM, Bag, Light_Bag
+from .model_utils import BasicBlock, Bottleneck, segmenthead, DAPPM, PAPPM, PagFM, Bag, Light_Bag, MyBag
 import logging
 
 BatchNorm2d = nn.BatchNorm2d
@@ -244,7 +244,7 @@ class MyPIDNet(nn.Module):
             #     BatchNorm2d(planes * 2, momentum=bn_mom),
             # )
             self.spp = PAPPM(planes * 16, ppm_planes, planes * 4)
-            self.dfm = Light_Bag(planes * 4, planes * 4)
+            self.dfm = MyBag(planes * 4, planes * 4)
         else:
             self.layer3_d = self._make_single_layer(BasicBlock, planes * 2, planes * 2)
             self.layer4_d = self._make_single_layer(BasicBlock, planes * 2, planes * 2)
@@ -257,9 +257,9 @@ class MyPIDNet(nn.Module):
             #     BatchNorm2d(planes * 2, momentum=bn_mom),
             # )
             self.spp = DAPPM(planes * 16, ppm_planes, planes * 4)
-            self.dfm = Bag(planes * 4, planes * 4)
+            self.dfm = MyBag(planes * 4, planes * 4)
 
-        self.layer5_d = self._make_layer(Bottleneck, planes * 2, planes * 2, 1)
+            self.layer5_d = self._make_layer(Bottleneck, planes * 2, planes * 2, 1)
 
         # Prediction Head
         if self.augment:
