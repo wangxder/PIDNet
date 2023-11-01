@@ -3,7 +3,5 @@
 samples/
 pretrained_models/
 figs/
-tools/log/
-tools/output/
 utils/__pycache__/
 models/__pycache__/
