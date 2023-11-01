@@ -245,6 +245,7 @@ class MyPIDNet(nn.Module):
             # )
             self.spp = PAPPM(planes * 16, ppm_planes, planes * 4)
             self.dfm = MyBag(planes * 4, planes * 4)
+            self.layer5_d = self._make_layer(Bottleneck, planes * 2, planes * 2, 1)
         else:
             self.layer3_d = self._make_single_layer(BasicBlock, planes * 2, planes * 2)
             self.layer4_d = self._make_single_layer(BasicBlock, planes * 2, planes * 2)
