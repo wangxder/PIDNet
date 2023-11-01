@@ -370,6 +370,9 @@ class Bag(nn.Module):
                                 nn.Conv2d(in_channels, out_channels, 
                                           kernel_size=3, padding=1, bias=False)                  
                                 )
+    def forward(self, p, i, d):
+        edge_att = torch.sigmoid(d)
+        return self.conv(edge_att*p + (1-edge_att)*i)
 
 class MyBag(nn.Module):
     def __init__(self, in_channels, out_channels, BatchNorm=nn.BatchNorm2d):
