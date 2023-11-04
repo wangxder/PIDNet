@@ -244,7 +244,18 @@ class MyPIDNet(nn.Module):
             #     BatchNorm2d(planes * 2, momentum=bn_mom),
             # )
             self.spp = PAPPM(planes * 16, ppm_planes, planes * 4)
-            self.dfm = MyBag(planes * 4, planes * 4)
+            self.bag3_up = MyBag(planes * 2, planes * 2)
+            self.sig3_up = nn.Conv2d(planes, planes * 2, kernel_size= 1)
+            self.bag3_down = MyBag(planes * 4, planes * 4)
+            self.sig3_down = nn.Conv2d(planes, planes * 4, kernel_size= 3, stride = 2, padding = 1)
+            self.bag4_up = MyBag(planes * 2, planes * 2)
+            # self.sig4_up = nn.Conv2d(planes * 2, planes * 2, kernel_size= 1)
+            self.bag4_down = MyBag(planes * 8, planes * 8)
+            self.sig4_down = nn.Sequential(
+                nn.Conv2d(planes * 2, planes * 4, kernel_size=3, stride = 2, padding = 1),
+                nn.Conv2d(planes * 4, planes * 8, kernel_size=3, stride = 2, padding = 1)
+            )
+            self.dfm = Bag(planes * 4, planes * 4)
             self.layer5_d = self._make_layer(Bottleneck, planes * 2, planes * 2, 1)
         else:
             self.layer3_d = self._make_single_layer(BasicBlock, planes * 2, planes * 2)
@@ -258,7 +269,7 @@ class MyPIDNet(nn.Module):
             #     BatchNorm2d(planes * 2, momentum=bn_mom),
             # )
             self.spp = DAPPM(planes * 16, ppm_planes, planes * 4)
-            self.dfm = MyBag(planes * 4, planes * 4)
+            self.dfm = Bag(planes * 4, planes * 4)
 
             self.layer5_d = self._make_layer(Bottleneck, planes * 2, planes * 2, 1)
 
@@ -326,11 +337,11 @@ class MyPIDNet(nn.Module):
         x_d = self.layer3_d(self.relu(x))
         x = self.layer3(self.relu(x))
         layers.append(x)
-        x = x + self.down3(self.relu(x_))
-        x_ = x_ + F.interpolate(self.compression3(self.relu(layers[2])),
-                                size=[height_output, width_output],
-                                mode='bilinear', align_corners=algc
-                                )
+        x = self.bag3_down(self.down3(self.relu(x_)), x, self.sig3_down(x_d))
+        x_ = self.bag3_up(x_, F.interpolate(self.compression3(self.relu(layers[2])),
+                                            size=[height_output, width_output],
+                                            mode='bilinear', align_corners=algc
+                                            ), self.sig3_up(x_d))
         # x_d = x_d + F.interpolate(
         #     self.diff3(x),
         #     size=[height_output, width_output],
@@ -342,11 +353,16 @@ class MyPIDNet(nn.Module):
         layers.append(x)
         x_ = self.layer4_(self.relu(x_))
         x_d = self.layer4_d(self.relu(x_d))
-        x = x + self.down4(self.relu(x_))
-        x_ = x_ + F.interpolate(self.compression4(self.relu(layers[3])),
-                                size=[height_output, width_output],
-                                mode='bilinear', align_corners=algc
-                                )
+        # x = x + self.down4(self.relu(x_))
+        x = self.bag4_down(self.down4(self.relu(x_)), x, self.sig4_down(x_d))
+        # x_ = x_ + F.interpolate(self.compression4(self.relu(layers[3])),
+        #                         size=[height_output, width_output],
+        #                         mode='bilinear', align_corners=algc
+        #                         )
+        x_ = self.bag4_up(x_, F.interpolate(self.compression4(self.relu(layers[3])),
+                                            size=[height_output, width_output],
+                                            mode='bilinear', align_corners=algc
+                                            ), x_d)
         # x_ = self.pag4(x_, self.compression4(x))
         # x_d = x_d + F.interpolate(
         #     self.diff4(x),

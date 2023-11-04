@@ -377,6 +377,7 @@ class Bag(nn.Module):
 class MyBag(nn.Module):
     def __init__(self, in_channels, out_channels, BatchNorm=nn.BatchNorm2d):
         super(MyBag, self).__init__()
+
         self.conv = nn.Sequential(
             BatchNorm(in_channels),
             nn.ReLU(inplace=True),
@@ -384,12 +385,9 @@ class MyBag(nn.Module):
                       kernel_size=3, padding=1, bias=False)
         )
 
-        
     def forward(self, p, i, d):
-        # only add
-        # edge_att = torch.sigmoid(d)
-        # return self.conv(edge_att*p + (1-edge_att)*i)
-        return self.conv(p + i + d)
+        edge_att = torch.sigmoid(d)
+        return self.conv(edge_att * p + (1 - edge_att) * i)
 
 
 if __name__ == '__main__':
