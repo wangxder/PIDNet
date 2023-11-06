@@ -17,7 +17,7 @@ DATASET:
 MODEL:
   NAME: owner
   NUM_OUTPUTS: 2
-  PRETRAINED: "/media/zfy/新加卷/WJJ/py_project/PIDNet/pretrained_models/cityscapes/PIDNet_S_Cityscapes_val.pt"
+  PRETRAINED: "/media/zfy/新加卷/WJJ/py_project/PIDNet/tools/output/cityscapes/pidnet_small_cityscapes_myconfig/best.pt"
 LOSS:
   USE_OHEM: true
   OHEMTHRES: 0.9
